@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VND Converter</title>
+    <title>Currency Converter</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -15,48 +15,58 @@
         .vnds-card {
             background-color: var(--tg-theme-secondary-bg-color, #2c2c2c);
         }
-        /* Убираем стрелочки у input type="number" */
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+        .currency-btn {
+            font-size: 2.25rem;
+            line-height: 1;
+            padding: 0.625rem 0.75rem;
+            border-radius: 1rem;
+            border: 2px solid transparent;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .currency-btn:active {
+            transform: scale(0.95);
+        }
+        .currency-btn.active {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            transform: scale(1.08);
+        }
+        .currency-btn:not(.active):hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.04);
         }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-md mx-auto">
-        <h1 class="text-xl font-bold mb-6 text-center">Конвертер донгов</h1>
+        <h1 class="text-xl font-bold mb-6 text-center">Конвертер валют</h1>
         
         <div class="vnds-card p-5 rounded-2xl mb-6 shadow-xl border border-gray-700/50">
-            <label class="block text-xs font-medium opacity-50 uppercase tracking-wider mb-2">Сумма в VND (Вьетнам)</label>
-            <input type="number" id="vndInput" placeholder="0" 
+            <label id="inputLabel" class="block text-xs font-medium opacity-50 uppercase tracking-wider mb-3">Сумма в VND (Вьетнам)</label>
+
+            <div class="flex justify-between gap-2 mb-4" id="currencySelector">
+                <button type="button" class="currency-btn active" data-currency="VND" onclick="switchCurrency('VND')" aria-label="Вьетнамский донг">🇻🇳</button>
+                <button type="button" class="currency-btn" data-currency="RUB" onclick="switchCurrency('RUB')" aria-label="Российский рубль">🇷🇺</button>
+                <button type="button" class="currency-btn" data-currency="USD" onclick="switchCurrency('USD')" aria-label="Доллар США">🇺🇸</button>
+                <button type="button" class="currency-btn" data-currency="CNY" onclick="switchCurrency('CNY')" aria-label="Китайский юань">🇨🇳</button>
+            </div>
+
+            <input type="text" id="amountInput" inputmode="numeric" placeholder="0" autocomplete="off"
                 class="w-full bg-transparent text-4xl font-bold border-b border-gray-600 focus:outline-none focus:border-blue-500 transition-colors">
             
             <div class="flex gap-2 mt-6">
-                <button onclick="addValue(10000)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl text-sm font-semibold transition-all">+10k</button>
-                <button onclick="addValue(100000)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl text-sm font-semibold transition-all">+100k</button>
-                <button onclick="addValue(1000000)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl text-sm font-semibold transition-all">+1M</button>
+                <button type="button" onclick="multiplyValue(1000)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl text-sm font-semibold transition-all">,000</button>
+                <button type="button" onclick="multiplyValue(1000000)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl text-sm font-semibold transition-all">000,000</button>
             </div>
         </div>
 
-        <div class="space-y-4">
-            <div class="vnds-card p-5 rounded-2xl flex justify-between items-center border border-gray-700/50">
-                <div>
-                    <span class="block text-xs opacity-50 uppercase font-medium">В рублях</span>
-                    <span id="resRub" class="text-2xl font-bold text-blue-400">0</span>
-                </div>
-                <span class="text-2xl">🇷🇺</span>
-            </div>
-            <div class="vnds-card p-5 rounded-2xl flex justify-between items-center border border-gray-700/50">
-                <div>
-                    <span class="block text-xs opacity-50 uppercase font-medium">В долларах</span>
-                    <span id="resUsd" class="text-2xl font-bold text-green-400">0</span>
-                </div>
-                <span class="text-2xl">🇺🇸</span>
-            </div>
-        </div>
+        <div id="results" class="space-y-4"></div>
 
-        <button onclick="clearAll()" class="w-full mt-8 py-3 text-gray-500 font-medium hover:text-red-400 transition-colors">Очистить всё</button>
+        <button type="button" onclick="clearAll()" class="w-full mt-8 py-3 text-gray-500 font-medium hover:text-red-400 transition-colors">Очистить всё</button>
     </div>
 
     <script>
@@ -64,50 +74,141 @@
         tg.expand();
         tg.ready();
 
-        // --- НАСТРОЙКИ ---
         const API_KEY = '6f1d27cd1bdd8ad495997f7f';
-        let rates = { RUB: 0, USD: 0 };
 
-        // Функция загрузки курсов
-        async function fetchRates() {
+        const CURRENCIES = {
+            VND: { flag: '🇻🇳', label: 'В донгах', country: 'Вьетнам', locale: 'en-US', decimals: 0, color: 'text-amber-400' },
+            RUB: { flag: '🇷🇺', label: 'В рублях', country: 'Россия', locale: 'ru-RU', decimals: 0, color: 'text-blue-400' },
+            USD: { flag: '🇺🇸', label: 'В долларах', country: 'США', locale: 'en-US', decimals: 2, color: 'text-green-400' },
+            CNY: { flag: '🇨🇳', label: 'В юанях', country: 'Китай', locale: 'zh-CN', decimals: 2, color: 'text-red-400' },
+        };
+
+        const CURRENCY_ORDER = ['VND', 'RUB', 'USD', 'CNY'];
+
+        let baseCurrency = 'VND';
+        let rates = {};
+
+        const amountInput = document.getElementById('amountInput');
+        const resultsEl = document.getElementById('results');
+
+        async function fetchRates(base = baseCurrency) {
             try {
-                const response = await fetch(`https://v6.exchangerate-api.com/v6/${API_KEY}/latest/VND`);
+                const response = await fetch(`https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`);
                 const data = await response.json();
-                if (data.result === "success") {
-                    rates.RUB = data.conversion_rates.RUB;
-                    rates.USD = data.conversion_rates.USD;
-                    console.log("Курсы обновлены:", rates);
+                if (data.result === 'success') {
+                    rates = data.conversion_rates;
+                    convert();
                 }
             } catch (error) {
-                console.error("Ошибка при получении курсов:", error);
+                console.error('Ошибка при получении курсов:', error);
             }
         }
 
-        // Логика пересчета
-        function convert() {
-            const vnd = parseFloat(document.getElementById('vndInput').value) || 0;
-            const rubResult = (vnd * rates.RUB).toLocaleString('ru-RU', { maximumFractionDigits: 0 });
-            const usdResult = (vnd * rates.USD).toLocaleString('en-US', { maximumFractionDigits: 2 });
-
-            document.getElementById('resRub').innerText = rubResult;
-            document.getElementById('resUsd').innerText = usdResult;
+        function parseAmount(str) {
+            return parseInt(String(str).replace(/\D/g, ''), 10) || 0;
         }
 
-        // Слушатель ввода
-        document.getElementById('vndInput').addEventListener('input', convert);
+        function formatAmount(num) {
+            return num ? num.toLocaleString('en-US') : '';
+        }
 
-        function addValue(amount) {
-            const input = document.getElementById('vndInput');
-            input.value = (parseInt(input.value) || 0) + amount;
+        function getAmount() {
+            return parseAmount(amountInput.value);
+        }
+
+        function setAmount(num) {
+            amountInput.value = formatAmount(num);
             convert();
+        }
+
+        function formatAmountInput() {
+            const digitsBefore = amountInput.value.slice(0, amountInput.selectionStart).replace(/\D/g, '').length;
+            const num = parseAmount(amountInput.value);
+            amountInput.value = formatAmount(num);
+
+            let pos = 0;
+            let digits = 0;
+            for (let i = 0; i < amountInput.value.length; i++) {
+                if (/\d/.test(amountInput.value[i])) digits++;
+                if (digits >= digitsBefore) {
+                    pos = i + 1;
+                    break;
+                }
+            }
+            if (digits < digitsBefore) pos = amountInput.value.length;
+            amountInput.setSelectionRange(pos, pos);
+            convert();
+        }
+
+        function formatResult(value, code) {
+            const { locale, decimals } = CURRENCIES[code];
+            return value.toLocaleString(locale, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: decimals,
+            });
+        }
+
+        function updateInputLabel() {
+            const c = CURRENCIES[baseCurrency];
+            document.getElementById('inputLabel').textContent = `Сумма в ${baseCurrency} (${c.country})`;
+        }
+
+        function updateCurrencyButtons() {
+            document.querySelectorAll('.currency-btn').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.currency === baseCurrency);
+            });
+        }
+
+        function renderResults() {
+            resultsEl.innerHTML = '';
+            CURRENCY_ORDER.filter((code) => code !== baseCurrency).forEach((code) => {
+                const c = CURRENCIES[code];
+                const card = document.createElement('div');
+                card.className = 'vnds-card p-5 rounded-2xl flex justify-between items-center border border-gray-700/50';
+                card.innerHTML = `
+                    <div>
+                        <span class="block text-xs opacity-50 uppercase font-medium">${c.label}</span>
+                        <span id="res-${code}" class="text-2xl font-bold ${c.color}">0</span>
+                    </div>
+                    <span class="text-4xl leading-none opacity-90">${c.flag}</span>
+                `;
+                resultsEl.appendChild(card);
+            });
+        }
+
+        function convert() {
+            const amount = getAmount();
+            CURRENCY_ORDER.filter((code) => code !== baseCurrency).forEach((code) => {
+                const el = document.getElementById(`res-${code}`);
+                if (!el || !rates[code]) return;
+                el.textContent = formatResult(amount * rates[code], code);
+            });
+        }
+
+        function switchCurrency(code) {
+            if (code === baseCurrency) return;
+            baseCurrency = code;
+            updateInputLabel();
+            updateCurrencyButtons();
+            renderResults();
+            fetchRates(code);
+        }
+
+        amountInput.addEventListener('input', formatAmountInput);
+
+        function multiplyValue(factor) {
+            const base = getAmount();
+            if (base === 0) return;
+            setAmount(base * factor);
         }
 
         function clearAll() {
-            document.getElementById('vndInput').value = '';
+            amountInput.value = '';
             convert();
         }
 
-        // Запускаем обновление курсов при старте
+        updateInputLabel();
+        renderResults();
         fetchRates();
     </script>
 </body>
