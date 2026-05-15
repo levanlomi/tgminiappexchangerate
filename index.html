@@ -158,7 +158,7 @@
         const DISPLAY_ORDER = ['RUB', 'USD', 'VND', 'CNY'];
 
         // --- ЛОГИКА ТЕМЫ ---
-        let manualTheme = localStorage.getItem('app-theme'); // 'light' или 'dark'
+        let manualTheme = localStorage.getItem('app-theme'); 
 
         function applyManualTheme() {
             document.body.classList.remove('theme-light', 'theme-dark');
@@ -173,7 +173,6 @@
             } else if (manualTheme === 'dark') {
                 manualTheme = 'light';
             } else {
-                // Если темы нет, проверяем текущий фон и ставим противоположный
                 const bgColor = getComputedStyle(document.body).getPropertyValue('--tg-theme-bg-color').trim();
                 const isLight = bgColor === '#ffffff' || document.body.style.backgroundColor === 'rgb(255, 255, 255)';
                 manualTheme = isLight ? 'dark' : 'light';
@@ -181,32 +180,52 @@
             
             localStorage.setItem('app-theme', manualTheme);
             applyManualTheme();
-            convert(); // Обновляем цвета рамок карточек
+            convert(); 
         }
 
-        // Применяем тему при загрузке
         applyManualTheme();
         // -------------------
 
+        // --- ЛОГИКА ЗАГРУЗКИ КУРСОВ (С ОФЛАЙН КЭШЕМ) ---
         async function fetchRates(base = 'RUB') {
             try {
                 const response = await fetch(`https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`);
                 const data = await response.json();
+                
                 if (data.result === "success") {
                     rates = data.conversion_rates;
                     
                     const now = new Date();
                     const dateStr = now.toLocaleDateString('ru-RU');
                     const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                    lastUpdateEl.textContent = `Курс обновлен: ${dateStr} в ${timeStr}`;
+                    const updateText = `Курс обновлен: ${dateStr} в ${timeStr}`;
+                    
+                    lastUpdateEl.textContent = updateText;
+                    
+                    // Сохраняем свежие данные в память телефона (кэш)
+                    localStorage.setItem(`rates_${base}`, JSON.stringify(rates));
+                    localStorage.setItem(`update_${base}`, updateText);
                     
                     convert();
                 }
             } catch (e) { 
-                console.error("Ошибка API:", e);
-                lastUpdateEl.textContent = "Ошибка обновления курса";
+                console.error("Нет сети, пытаемся загрузить из кэша:", e);
+                
+                // Достаем сохраненные данные из памяти
+                const cachedRates = localStorage.getItem(`rates_${base}`);
+                const cachedUpdateText = localStorage.getItem(`update_${base}`);
+                
+                if (cachedRates) {
+                    rates = JSON.parse(cachedRates);
+                    // Добавляем значок самолета, чтобы показать работу в офлайне
+                    lastUpdateEl.textContent = `${cachedUpdateText} (Офлайн ✈️)`;
+                    convert();
+                } else {
+                    lastUpdateEl.textContent = "Нет сети и сохраненных данных 😔";
+                }
             }
         }
+        // -------------------
 
         function formatNumber(num, fractionDigits = 0) {
             return new Intl.NumberFormat('en-US', { 
