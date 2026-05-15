@@ -10,12 +10,32 @@
     <link rel="apple-touch-icon" href="icon.png">
     <style>
         body {
-            background-color: var(--tg-theme-bg-color, #1a1a1a);
-            color: var(--tg-theme-text-color, #ffffff);
+            /* Базовые цвета из Telegram */
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+
+        /* ПРИНУДИТЕЛЬНАЯ СВЕТЛАЯ ТЕМА */
+        body.theme-light {
+            --tg-theme-bg-color: #ffffff !important;
+            --tg-theme-text-color: #000000 !important;
+            --tg-theme-secondary-bg-color: #f3f4f6 !important;
+            --tg-theme-hint-color: #9ca3af !important;
+        }
+
+        /* ПРИНУДИТЕЛЬНАЯ ТЕМНАЯ ТЕМА */
+        body.theme-dark {
+            --tg-theme-bg-color: #1a1a1a !important;
+            --tg-theme-text-color: #ffffff !important;
+            --tg-theme-secondary-bg-color: #2c2c2c !important;
+            --tg-theme-hint-color: #9ca3af !important;
+        }
+
         .vnds-card {
-            background-color: var(--tg-theme-secondary-bg-color, #2c2c2c);
+            background-color: var(--tg-theme-secondary-bg-color, #f3f4f6);
+            border: 1px solid var(--tg-theme-hint-color, rgba(0,0,0,0.1));
         }
         .currency-btn {
             font-size: 2rem;
@@ -23,13 +43,22 @@
             padding: 0.5rem 0.6rem;
             border-radius: 1rem;
             border: 2px solid transparent;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05));
             transition: all 0.15s ease;
         }
         .currency-btn.active {
-            border-color: #3b82f6;
+            border-color: var(--tg-theme-button-color, #3b82f6);
             background: rgba(59, 130, 246, 0.1);
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .zero-btn {
+            background-color: var(--tg-theme-button-color, #3b82f6);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+        }
+        .zero-btn:active {
+            opacity: 0.8;
+            transform: scale(0.98);
         }
         .clear-btn {
             background-color: rgba(239, 68, 68, 0.1);
@@ -45,25 +74,53 @@
             -webkit-appearance: none;
             margin: 0;
         }
+        .custom-input {
+            border-bottom: 1px solid var(--tg-theme-hint-color, #ccc);
+            color: var(--tg-theme-text-color, #000000);
+        }
+        .custom-input:focus {
+            border-bottom-color: var(--tg-theme-button-color, #3b82f6);
+            outline: none;
+        }
+        
+        /* Кнопка смены темы */
+        .theme-toggle-btn {
+            color: var(--tg-theme-text-color, #000000);
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle-btn:hover {
+            opacity: 1;
+            transform: rotate(-15deg);
+        }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-md mx-auto">
-        <div class="flex justify-center gap-3 mb-8" id="baseSelector">
-            <button onclick="switchCurrency('RUB')" id="btn-RUB" class="currency-btn active">🇷🇺</button>
-            <button onclick="switchCurrency('USD')" id="btn-USD" class="currency-btn">🇺🇸</button>
-            <button onclick="switchCurrency('VND')" id="btn-VND" class="currency-btn">🇻🇳</button>
-            <button onclick="switchCurrency('CNY')" id="btn-CNY" class="currency-btn">🇨🇳</button>
+        
+        <div class="relative flex justify-center items-center mb-8">
+            <div class="flex justify-center gap-3" id="baseSelector">
+                <button onclick="switchCurrency('RUB')" id="btn-RUB" class="currency-btn active">🇷🇺</button>
+                <button onclick="switchCurrency('USD')" id="btn-USD" class="currency-btn">🇺🇸</button>
+                <button onclick="switchCurrency('VND')" id="btn-VND" class="currency-btn">🇻🇳</button>
+                <button onclick="switchCurrency('CNY')" id="btn-CNY" class="currency-btn">🇨🇳</button>
+            </div>
+            
+            <button onclick="toggleTheme()" class="theme-toggle-btn absolute right-0 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                </svg>
+            </button>
         </div>
 
-        <div class="vnds-card p-5 rounded-2xl mb-6 shadow-xl border border-gray-700/50">
-            <label id="inputLabel" class="block text-xs font-medium opacity-50 uppercase tracking-wider mb-2">Сумма (В рублях)</label>
+        <div class="vnds-card p-5 rounded-2xl mb-6 shadow-xl transition-all">
+            <label id="inputLabel" class="block text-xs font-medium opacity-50 uppercase tracking-wider mb-2" style="color: var(--tg-theme-hint-color, inherit);">Сумма (В рублях)</label>
             <input type="text" id="amountInput" inputmode="numeric" placeholder="0" 
-                class="w-full bg-transparent text-4xl font-bold border-b border-gray-600 focus:outline-none focus:border-blue-500 transition-colors">
+                class="w-full bg-transparent text-4xl font-bold custom-input transition-colors rounded-none pb-1">
             
             <div class="flex gap-2 mt-6">
-                <button type="button" onclick="addZeros('000')" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl text-sm font-semibold transition-all">,000</button>
-                <button type="button" onclick="addZeros('000000')" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl text-sm font-semibold transition-all">,000,000</button>
+                <button type="button" onclick="addZeros('000')" class="zero-btn flex-1 py-3 rounded-xl text-sm font-semibold transition-all">,000</button>
+                <button type="button" onclick="addZeros('000000')" class="zero-btn flex-1 py-3 rounded-xl text-sm font-semibold transition-all">,000,000</button>
             </div>
         </div>
 
@@ -89,17 +146,47 @@
         
         let baseCurrency = 'RUB';
         let rates = { RUB: 1, USD: 0, VND: 0, CNY: 0 };
-        
         const API_KEY = '6f1d27cd1bdd8ad495997f7f'; 
 
         const CURRENCIES = {
-            RUB: { label: 'В рублях', flag: '🇷🇺', color: 'text-blue-400' },
-            USD: { label: 'В долларах', flag: '🇺🇸', color: 'text-green-400' },
-            VND: { label: 'В донгах', flag: '🇻🇳', color: 'text-yellow-400' },
-            CNY: { label: 'В юанях', flag: '🇨🇳', color: 'text-red-400' }
+            RUB: { label: 'В рублях', flag: '🇷🇺', color: 'text-blue-500' },
+            USD: { label: 'В долларах', flag: '🇺🇸', color: 'text-green-500' },
+            VND: { label: 'В донгах', flag: '🇻🇳', color: 'text-yellow-500' },
+            CNY: { label: 'В юанях', flag: '🇨🇳', color: 'text-red-500' }
         };
 
         const DISPLAY_ORDER = ['RUB', 'USD', 'VND', 'CNY'];
+
+        // --- ЛОГИКА ТЕМЫ ---
+        let manualTheme = localStorage.getItem('app-theme'); // 'light' или 'dark'
+
+        function applyManualTheme() {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            if (manualTheme) {
+                document.body.classList.add(`theme-${manualTheme}`);
+            }
+        }
+
+        function toggleTheme() {
+            if (manualTheme === 'light') {
+                manualTheme = 'dark';
+            } else if (manualTheme === 'dark') {
+                manualTheme = 'light';
+            } else {
+                // Если темы нет, проверяем текущий фон и ставим противоположный
+                const bgColor = getComputedStyle(document.body).getPropertyValue('--tg-theme-bg-color').trim();
+                const isLight = bgColor === '#ffffff' || document.body.style.backgroundColor === 'rgb(255, 255, 255)';
+                manualTheme = isLight ? 'dark' : 'light';
+            }
+            
+            localStorage.setItem('app-theme', manualTheme);
+            applyManualTheme();
+            convert(); // Обновляем цвета рамок карточек
+        }
+
+        // Применяем тему при загрузке
+        applyManualTheme();
+        // -------------------
 
         async function fetchRates(base = 'RUB') {
             try {
@@ -151,10 +238,10 @@
                 const c = CURRENCIES[code];
                 const card = document.createElement('div');
                 card.id = `card-${code}`;
-                card.className = 'vnds-card p-5 rounded-2xl flex justify-between items-center border border-gray-700/50 transition-all';
+                card.className = 'vnds-card p-5 rounded-2xl flex justify-between items-center transition-all';
                 card.innerHTML = `
                     <div>
-                        <span class="block text-xs opacity-50 uppercase font-medium">${c.label}</span>
+                        <span class="block text-xs opacity-50 uppercase font-medium" style="color: var(--tg-theme-hint-color, inherit);">${c.label}</span>
                         <span id="res-${code}" class="text-2xl font-bold ${c.color}">0</span>
                     </div>
                     <span class="text-4xl opacity-90">${c.flag}</span>
@@ -169,18 +256,18 @@
                 const el = document.getElementById(`res-${code}`);
                 const card = document.getElementById(`card-${code}`);
                 
-                if (el) {
+                if (el && card) {
                     let resultValue;
                     if (code === baseCurrency) {
                         resultValue = amount;
                         card.style.opacity = "1";
-                        card.style.borderColor = "rgba(59, 130, 246, 0.5)";
+                        card.style.borderColor = "var(--tg-theme-button-color, #3b82f6)";
                         card.style.background = "rgba(59, 130, 246, 0.05)";
                     } else {
                         resultValue = amount * (rates[code] || 0);
                         card.style.opacity = "0.8";
-                        card.style.borderColor = "rgba(55, 65, 81, 0.5)";
-                        card.style.background = "var(--tg-theme-secondary-bg-color, #2c2c2c)";
+                        card.style.borderColor = "var(--tg-theme-hint-color, rgba(0,0,0,0.1))";
+                        card.style.background = "var(--tg-theme-secondary-bg-color, #f3f4f6)";
                     }
                     
                     el.textContent = formatNumber(resultValue, code === 'VND' ? 0 : 2);
@@ -217,6 +304,10 @@
 
         initCards();
         fetchRates(baseCurrency);
+        
+        tg.onEvent('themeChanged', function() {
+            convert();
+        });
     </script>
 </body>
 </html>
