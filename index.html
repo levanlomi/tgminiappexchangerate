@@ -99,10 +99,11 @@
     <div class="max-w-md mx-auto">
         
         <div class="relative flex justify-center items-center mb-8">
-            <div class="flex justify-center gap-3" id="baseSelector">
-                <button onclick="switchCurrency('RUB')" id="btn-RUB" class="currency-btn active">🇷🇺</button>
+            <div class="flex justify-center gap-2" id="baseSelector">
+                <button onclick="switchCurrency('VND')" id="btn-VND" class="currency-btn active">🇻🇳</button>
+                <button onclick="switchCurrency('RUB')" id="btn-RUB" class="currency-btn">🇷🇺</button>
                 <button onclick="switchCurrency('USD')" id="btn-USD" class="currency-btn">🇺🇸</button>
-                <button onclick="switchCurrency('VND')" id="btn-VND" class="currency-btn">🇻🇳</button>
+                <button onclick="switchCurrency('KZT')" id="btn-KZT" class="currency-btn">🇰🇿</button>
                 <button onclick="switchCurrency('CNY')" id="btn-CNY" class="currency-btn">🇨🇳</button>
             </div>
             
@@ -150,9 +151,10 @@
                 offline: 'Офлайн',
                 noData: 'Нет сети и сохраненных данных 😔',
                 currencies: {
+                    VND: 'В донгах',
                     RUB: 'В рублях',
                     USD: 'В долларах',
-                    VND: 'В донгах',
+                    KZT: 'В тенге',
                     CNY: 'В юанях'
                 }
             },
@@ -165,9 +167,10 @@
                 offline: 'Offline',
                 noData: 'No network and no cached data 😔',
                 currencies: {
+                    VND: 'In Dong',
                     RUB: 'In Rubles',
                     USD: 'In Dollars',
-                    VND: 'In Dong',
+                    KZT: 'In Tenge',
                     CNY: 'In Yuan'
                 }
             }
@@ -180,18 +183,20 @@
         const lastUpdateEl = document.getElementById('lastUpdate');
         const clearBtn = document.getElementById('clearBtn');
         
-        let baseCurrency = 'RUB';
-        let rates = { RUB: 1, USD: 0, VND: 0, CNY: 0 };
+        // Переменная дефолтной валюты изменена на VND
+        let baseCurrency = 'VND';
+        let rates = { VND: 1, RUB: 0, USD: 0, KZT: 0, CNY: 0 };
         const API_KEY = '6f1d27cd1bdd8ad495997f7f'; 
 
         const CURRENCIES = {
+            VND: { label: currentText.currencies.VND, flag: '🇻🇳', color: 'text-yellow-500' },
             RUB: { label: currentText.currencies.RUB, flag: '🇷🇺', color: 'text-blue-500' },
             USD: { label: currentText.currencies.USD, flag: '🇺🇸', color: 'text-green-500' },
-            VND: { label: currentText.currencies.VND, flag: '🇻🇳', color: 'text-yellow-500' },
+            KZT: { label: currentText.currencies.KZT, flag: '🇰🇿', color: 'text-teal-500' },
             CNY: { label: currentText.currencies.CNY, flag: '🇨🇳', color: 'text-red-500' }
         };
 
-        const DISPLAY_ORDER = ['RUB', 'USD', 'VND', 'CNY'];
+        const DISPLAY_ORDER = ['VND', 'RUB', 'USD', 'KZT', 'CNY'];
 
         // --- ЛОГИКА ТЕМЫ ---
         let manualTheme = localStorage.getItem('app-theme'); 
@@ -225,7 +230,7 @@
         applyManualTheme();
 
         // --- ЛОГИКА ЗАГРУЗКИ КУРСОВ (С ОФЛАЙН КЭШЕМ) ---
-        async function fetchRates(base = 'RUB') {
+        async function fetchRates(base = 'VND') {
             try {
                 const response = await fetch(`https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${base}`);
                 const data = await response.json();
@@ -302,7 +307,6 @@
                 resultsEl.appendChild(card);
             });
 
-            // Наполнение интерфейса текстами из словаря
             document.getElementById('inputLabel').textContent = `${currentText.amount} (${CURRENCIES[baseCurrency].label})`;
             clearBtn.textContent = currentText.clearAll;
             lastUpdateEl.textContent = currentText.loading;
@@ -328,7 +332,8 @@
                         card.style.background = "var(--tg-theme-secondary-bg-color, #f3f4f6)";
                     }
                     
-                    el.textContent = formatNumber(resultValue, code === 'VND' ? 0 : 2);
+                    const decimals = (code === 'VND' || code === 'KZT') ? 0 : 2;
+                    el.textContent = formatNumber(resultValue, decimals);
                 }
             });
         }
