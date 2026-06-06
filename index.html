@@ -15,6 +15,7 @@
             color: var(--tg-theme-text-color, #000000);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
         }
 
         /* ПРИНУДИТЕЛЬНАЯ СВЕТЛАЯ ТЕМА */
@@ -95,10 +96,10 @@
         }
     </style>
 </head>
-<body class="p-4">
-    <div class="max-w-md mx-auto">
+<body>
+    <div class="max-w-md mx-auto w-full flex flex-col p-4 box-border" style="min-height: var(--tg-viewport-stable-height, 100vh);">
         
-        <div class="relative flex justify-center items-center mb-5">
+        <div class="relative flex justify-center items-center mb-5 flex-shrink-0">
             <div class="flex justify-center gap-3" id="baseSelector">
                 <button onclick="switchCurrency('VND')" id="btn-VND" class="currency-btn active">🇻🇳</button>
                 <button onclick="switchCurrency('RUB')" id="btn-RUB" class="currency-btn">🇷🇺</button>
@@ -114,7 +115,7 @@
             </button>
         </div>
 
-        <div class="vnds-card p-4 rounded-xl mb-4 shadow-xl transition-all">
+        <div class="vnds-card p-4 rounded-xl mb-6 shadow-xl transition-all flex-shrink-0">
             <label id="inputLabel" class="block text-xs font-medium uppercase tracking-wider mb-1" style="color: var(--tg-theme-hint-color, inherit); opacity: 0.5;"></label>
             <input type="text" id="amountInput" inputmode="numeric" placeholder="0" 
                 class="w-full bg-transparent text-3xl font-bold custom-input transition-colors rounded-none pb-1">
@@ -125,12 +126,13 @@
             </div>
         </div>
 
-        <div id="results" class="space-y-2.5"></div>
+        <div id="results" class="flex-1 flex flex-col justify-start space-y-2.5"></div>
 
-        <div id="lastUpdate" class="mt-5 text-center text-[10px] opacity-30 font-medium uppercase tracking-widest"></div>
-
-        <button onclick="clearAll()" id="clearBtn" class="clear-btn w-full mt-3 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all">
-        </button>
+        <div class="mt-auto pt-4 flex-shrink-0">
+            <div id="lastUpdate" class="text-center text-[10px] opacity-30 font-medium uppercase tracking-widest mb-3"></div>
+            <button onclick="clearAll()" id="clearBtn" class="clear-btn w-full py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all"></button>
+        </div>
+        
     </div>
 
     <script>
