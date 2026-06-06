@@ -83,15 +83,15 @@
             outline: none;
         }
         
-        /* Кнопка смены темы */
+        /* Кнопка смены темы (оптимизирована под тапы без hover) */
         .theme-toggle-btn {
             color: var(--tg-theme-text-color, #000000);
             opacity: 0.4;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
-        .theme-toggle-btn:hover {
+        .theme-toggle-btn:active {
             opacity: 1;
-            transform: rotate(-15deg);
+            transform: scale(0.92) rotate(-15deg);
         }
     </style>
 </head>
@@ -114,7 +114,7 @@
         </div>
 
         <div class="vnds-card p-5 rounded-2xl mb-6 shadow-xl transition-all">
-            <label id="inputLabel" class="block text-xs font-medium opacity-50 uppercase tracking-wider mb-2" style="color: var(--tg-theme-hint-color, inherit);">Сумма (В рублях)</label>
+            <label id="inputLabel" class="block text-xs font-medium uppercase tracking-wider mb-2" style="color: var(--tg-theme-hint-color, inherit); opacity: 0.5;"></label>
             <input type="text" id="amountInput" inputmode="numeric" placeholder="0" 
                 class="w-full bg-transparent text-4xl font-bold custom-input transition-colors rounded-none pb-1">
             
@@ -126,12 +126,9 @@
 
         <div id="results" class="space-y-4"></div>
 
-        <div id="lastUpdate" class="mt-8 text-center text-[10px] opacity-30 font-medium uppercase tracking-widest">
-            Обновление данных...
-        </div>
+        <div id="lastUpdate" class="mt-8 text-center text-[10px] opacity-30 font-medium uppercase tracking-widest"></div>
 
-        <button onclick="clearAll()" class="clear-btn w-full mt-4 py-4 rounded-2xl font-bold text-sm uppercase tracking-wider transition-all">
-            Очистить всё
+        <button onclick="clearAll()" id="clearBtn" class="clear-btn w-full mt-4 py-4 rounded-2xl font-bold text-sm uppercase tracking-wider transition-all">
         </button>
     </div>
 
@@ -140,25 +137,67 @@
         tg.expand();
         tg.ready();
 
+        // --- СЛОВАРЬ ЛОКАЛИЗАЦИИ ---
+        const userLang = tg.initDataUnsafe?.user?.language_code === 'en' ? 'en' : 'ru';
+        
+        const i18n = {
+            ru: {
+                amount: 'Сумма',
+                clearAll: 'Очистить всё',
+                loading: 'Обновление данных...',
+                updated: 'Курс обновлен',
+                at: 'в',
+                offline: 'Офлайн',
+                noData: 'Нет сети и сохраненных данных 😔',
+                currencies: {
+                    RUB: 'В рублях',
+                    USD: 'В долларах',
+                    VND: 'В донгах',
+                    CNY: 'В юанях'
+                }
+            },
+            en: {
+                amount: 'Amount',
+                clearAll: 'Clear All',
+                loading: 'Updating data...',
+                updated: 'Rates updated',
+                at: 'at',
+                offline: 'Offline',
+                noData: 'No network and no cached data 😔',
+                currencies: {
+                    RUB: 'In Rubles',
+                    USD: 'In Dollars',
+                    VND: 'In Dong',
+                    CNY: 'In Yuan'
+                }
+            }
+        };
+
+        const currentText = i18n[userLang];
+
         const amountInput = document.getElementById('amountInput');
         const resultsEl = document.getElementById('results');
         const lastUpdateEl = document.getElementById('lastUpdate');
+        const clearBtn = document.getElementById('clearBtn');
         
         let baseCurrency = 'RUB';
         let rates = { RUB: 1, USD: 0, VND: 0, CNY: 0 };
         const API_KEY = '6f1d27cd1bdd8ad495997f7f'; 
 
         const CURRENCIES = {
-            RUB: { label: 'В рублях', flag: '🇷🇺', color: 'text-blue-500' },
-            USD: { label: 'В долларах', flag: '🇺🇸', color: 'text-green-500' },
-            VND: { label: 'В донгах', flag: '🇻🇳', color: 'text-yellow-500' },
-            CNY: { label: 'В юанях', flag: '🇨🇳', color: 'text-red-500' }
+            RUB: { label: currentText.currencies.RUB, flag: '🇷🇺', color: 'text-blue-500' },
+            USD: { label: currentText.currencies.USD, flag: '🇺🇸', color: 'text-green-500' },
+            VND: { label: currentText.currencies.VND, flag: '🇻🇳', color: 'text-yellow-500' },
+            CNY: { label: currentText.currencies.CNY, flag: '🇨🇳', color: 'text-red-500' }
         };
 
         const DISPLAY_ORDER = ['RUB', 'USD', 'VND', 'CNY'];
 
         // --- ЛОГИКА ТЕМЫ ---
         let manualTheme = localStorage.getItem('app-theme'); 
+        if (!manualTheme && tg.colorScheme) {
+            manualTheme = tg.colorScheme;
+        }
 
         function applyManualTheme() {
             document.body.classList.remove('theme-light', 'theme-dark');
@@ -184,7 +223,6 @@
         }
 
         applyManualTheme();
-        // -------------------
 
         // --- ЛОГИКА ЗАГРУЗКИ КУРСОВ (С ОФЛАЙН КЭШЕМ) ---
         async function fetchRates(base = 'RUB') {
@@ -196,36 +234,32 @@
                     rates = data.conversion_rates;
                     
                     const now = new Date();
-                    const dateStr = now.toLocaleDateString('ru-RU');
-                    const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                    const updateText = `Курс обновлен: ${dateStr} в ${timeStr}`;
+                    const dateStr = now.toLocaleDateString(userLang === 'ru' ? 'ru-RU' : 'en-US');
+                    const timeStr = now.toLocaleTimeString(userLang === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                    const updateText = `${currentText.updated}: ${dateStr} ${currentText.at} ${timeStr}`;
                     
                     lastUpdateEl.textContent = updateText;
                     
-                    // Сохраняем свежие данные в память телефона (кэш)
                     localStorage.setItem(`rates_${base}`, JSON.stringify(rates));
                     localStorage.setItem(`update_${base}`, updateText);
                     
                     convert();
                 }
             } catch (e) { 
-                console.error("Нет сети, пытаемся загрузить из кэша:", e);
+                console.error("No network, using cache:", e);
                 
-                // Достаем сохраненные данные из памяти
                 const cachedRates = localStorage.getItem(`rates_${base}`);
                 const cachedUpdateText = localStorage.getItem(`update_${base}`);
                 
                 if (cachedRates) {
                     rates = JSON.parse(cachedRates);
-                    // Добавляем значок самолета, чтобы показать работу в офлайне
-                    lastUpdateEl.textContent = `${cachedUpdateText} (Офлайн ✈️)`;
+                    lastUpdateEl.textContent = `${cachedUpdateText} (${currentText.offline} ✈️)`;
                     convert();
                 } else {
-                    lastUpdateEl.textContent = "Нет сети и сохраненных данных 😔";
+                    lastUpdateEl.textContent = currentText.noData;
                 }
             }
         }
-        // -------------------
 
         function formatNumber(num, fractionDigits = 0) {
             return new Intl.NumberFormat('en-US', { 
@@ -267,6 +301,11 @@
                 `;
                 resultsEl.appendChild(card);
             });
+
+            // Наполнение интерфейса текстами из словаря
+            document.getElementById('inputLabel').textContent = `${currentText.amount} (${CURRENCIES[baseCurrency].label})`;
+            clearBtn.textContent = currentText.clearAll;
+            lastUpdateEl.textContent = currentText.loading;
         }
 
         function convert() {
@@ -303,7 +342,7 @@
                 if (btn) btn.classList.toggle('active', c === code);
             });
 
-            document.getElementById('inputLabel').textContent = `Сумма (${CURRENCIES[code].label})`;
+            document.getElementById('inputLabel').textContent = `${currentText.amount} (${CURRENCIES[code].label})`;
             fetchRates(code);
         }
 
@@ -321,10 +360,23 @@
 
         amountInput.addEventListener('input', formatAmountInput);
 
+        // --- РЕГИСТРАЦИЯ SERVICE WORKER ДЛЯ PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+
         initCards();
         fetchRates(baseCurrency);
         
         tg.onEvent('themeChanged', function() {
+            if (!localStorage.getItem('app-theme')) {
+                manualTheme = tg.colorScheme;
+                applyManualTheme();
+            }
             convert();
         });
     </script>
