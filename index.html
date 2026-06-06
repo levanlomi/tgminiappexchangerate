@@ -40,8 +40,8 @@
         .currency-btn {
             font-size: 2rem;
             line-height: 1;
-            padding: 0.5rem 0.6rem;
-            border-radius: 1rem;
+            padding: 0.4rem 0.5rem;
+            border-radius: 0.85rem;
             border: 2px solid transparent;
             background: var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05));
             transition: all 0.15s ease;
@@ -98,8 +98,8 @@
 <body class="p-4">
     <div class="max-w-md mx-auto">
         
-        <div class="relative flex justify-center items-center mb-8">
-            <div class="flex justify-center gap-2" id="baseSelector">
+        <div class="relative flex justify-center items-center mb-5">
+            <div class="flex justify-center gap-3" id="baseSelector">
                 <button onclick="switchCurrency('VND')" id="btn-VND" class="currency-btn active">🇻🇳</button>
                 <button onclick="switchCurrency('RUB')" id="btn-RUB" class="currency-btn">🇷🇺</button>
                 <button onclick="switchCurrency('USD')" id="btn-USD" class="currency-btn">🇺🇸</button>
@@ -114,22 +114,22 @@
             </button>
         </div>
 
-        <div class="vnds-card p-5 rounded-2xl mb-6 shadow-xl transition-all">
-            <label id="inputLabel" class="block text-xs font-medium uppercase tracking-wider mb-2" style="color: var(--tg-theme-hint-color, inherit); opacity: 0.5;"></label>
+        <div class="vnds-card p-4 rounded-xl mb-4 shadow-xl transition-all">
+            <label id="inputLabel" class="block text-xs font-medium uppercase tracking-wider mb-1" style="color: var(--tg-theme-hint-color, inherit); opacity: 0.5;"></label>
             <input type="text" id="amountInput" inputmode="numeric" placeholder="0" 
-                class="w-full bg-transparent text-4xl font-bold custom-input transition-colors rounded-none pb-1">
+                class="w-full bg-transparent text-3xl font-bold custom-input transition-colors rounded-none pb-1">
             
-            <div class="flex gap-2 mt-6">
-                <button type="button" onclick="addZeros('000')" class="zero-btn flex-1 py-3 rounded-xl text-sm font-semibold transition-all">,000</button>
-                <button type="button" onclick="addZeros('000000')" class="zero-btn flex-1 py-3 rounded-xl text-sm font-semibold transition-all">,000,000</button>
+            <div class="flex gap-2 mt-4">
+                <button type="button" onclick="addZeros('000')" class="zero-btn flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all">,000</button>
+                <button type="button" onclick="addZeros('000000')" class="zero-btn flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all">,000,000</button>
             </div>
         </div>
 
-        <div id="results" class="space-y-4"></div>
+        <div id="results" class="space-y-2.5"></div>
 
-        <div id="lastUpdate" class="mt-8 text-center text-[10px] opacity-30 font-medium uppercase tracking-widest"></div>
+        <div id="lastUpdate" class="mt-5 text-center text-[10px] opacity-30 font-medium uppercase tracking-widest"></div>
 
-        <button onclick="clearAll()" id="clearBtn" class="clear-btn w-full mt-4 py-4 rounded-2xl font-bold text-sm uppercase tracking-wider transition-all">
+        <button onclick="clearAll()" id="clearBtn" class="clear-btn w-full mt-3 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all">
         </button>
     </div>
 
@@ -183,7 +183,6 @@
         const lastUpdateEl = document.getElementById('lastUpdate');
         const clearBtn = document.getElementById('clearBtn');
         
-        // Переменная дефолтной валюты изменена на VND
         let baseCurrency = 'VND';
         let rates = { VND: 1, RUB: 0, USD: 0, KZT: 0, CNY: 0 };
         const API_KEY = '6f1d27cd1bdd8ad495997f7f'; 
@@ -296,13 +295,13 @@
                 const c = CURRENCIES[code];
                 const card = document.createElement('div');
                 card.id = `card-${code}`;
-                card.className = 'vnds-card p-5 rounded-2xl flex justify-between items-center transition-all';
+                card.className = 'vnds-card py-3 px-4 rounded-xl flex justify-between items-center transition-all';
                 card.innerHTML = `
                     <div>
-                        <span class="block text-xs opacity-50 uppercase font-medium" style="color: var(--tg-theme-hint-color, inherit);">${c.label}</span>
-                        <span id="res-${code}" class="text-2xl font-bold ${c.color}">0</span>
+                        <span class="block text-[11px] opacity-50 uppercase font-medium" style="color: var(--tg-theme-hint-color, inherit);">${c.label}</span>
+                        <span id="res-${code}" class="text-xl font-bold ${c.color}">0</span>
                     </div>
-                    <span class="text-4xl opacity-90">${c.flag}</span>
+                    <span class="text-3xl opacity-90">${c.flag}</span>
                 `;
                 resultsEl.appendChild(card);
             });
