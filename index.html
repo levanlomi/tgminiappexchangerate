@@ -27,6 +27,17 @@
     <style>
         :root {
             --app-height: var(--tg-viewport-stable-height, 100dvh);
+            --gap-section: clamp(0.5rem, 1.6dvh, 0.875rem);
+            --gap-cards: clamp(0.35rem, 1.1dvh, 0.65rem);
+            --pad-card: clamp(0.65rem, 2dvh, 1rem);
+            --radius-card: clamp(0.75rem, 2dvh, 1rem);
+            --text-label: clamp(0.65rem, 1.6dvh, 0.8rem);
+            --text-input: clamp(1.85rem, 5.8dvh, 2.75rem);
+            --text-result: clamp(1.15rem, 3.6dvh, 1.65rem);
+            --text-meta: clamp(0.55rem, 1.4dvh, 0.7rem);
+            --text-btn: clamp(0.8rem, 2dvh, 0.95rem);
+            --flag-header: clamp(1.65rem, 4.8dvh, 2.25rem);
+            --flag-result: clamp(1.5rem, 4.2dvh, 2rem);
         }
 
         body {
@@ -39,11 +50,124 @@
         }
 
         .app-shell {
+            display: flex;
+            flex-direction: column;
+            height: var(--app-height);
             max-height: var(--app-height);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-top: max(1rem, calc(env(safe-area-inset-top) + 0.5rem));
-            padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+            padding: max(0.85rem, calc(env(safe-area-inset-top) + 0.4rem)) clamp(0.85rem, 3vw, 1.1rem) max(0.65rem, env(safe-area-inset-bottom));
+            box-sizing: border-box;
+        }
+
+        .app-header {
+            flex-shrink: 0;
+            margin-bottom: var(--gap-section);
+        }
+
+        .input-card {
+            flex-shrink: 0;
+            margin-bottom: var(--gap-section);
+            padding: var(--pad-card);
+            border-radius: var(--radius-card);
+        }
+
+        .input-label {
+            font-size: var(--text-label);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+            color: var(--tg-theme-hint-color, inherit);
+            opacity: 0.5;
+        }
+
+        .amount-input {
+            width: 100%;
+            background: transparent;
+            font-size: var(--text-input);
+            font-weight: 700;
+            line-height: 1.1;
+            padding-bottom: 0.25rem;
+        }
+
+        .zero-row {
+            display: flex;
+            gap: var(--gap-cards);
+            margin-top: clamp(0.5rem, 1.6dvh, 0.85rem);
+        }
+
+        .zero-btn {
+            flex: 1;
+            padding: clamp(0.55rem, 1.8dvh, 0.8rem) 0.5rem;
+            border-radius: var(--radius-card);
+            font-size: var(--text-btn);
+            font-weight: 600;
+        }
+
+        .results-list {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap-cards);
+            min-height: 0;
+        }
+
+        .result-card {
+            flex: 1 1 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: clamp(0.45rem, 1.4dvh, 0.75rem) var(--pad-card);
+            border-radius: var(--radius-card);
+            min-height: clamp(2.75rem, 8dvh, 4rem);
+        }
+
+        .result-label {
+            display: block;
+            font-size: var(--text-label);
+            font-weight: 500;
+            text-transform: uppercase;
+            opacity: 0.5;
+            color: var(--tg-theme-hint-color, inherit);
+            margin-bottom: 0.15rem;
+        }
+
+        .result-value {
+            font-size: var(--text-result);
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .result-flag {
+            font-size: var(--flag-result);
+            line-height: 1;
+            opacity: 0.9;
+        }
+
+        .app-footer {
+            flex-shrink: 0;
+            margin-top: var(--gap-section);
+        }
+
+        .last-update {
+            margin-bottom: clamp(0.35rem, 1.2dvh, 0.6rem);
+            text-align: center;
+            font-size: var(--text-meta);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.3;
+        }
+
+        .clear-btn {
+            width: 100%;
+            padding: clamp(0.7rem, 2.2dvh, 0.95rem) 0.5rem;
+            border-radius: var(--radius-card);
+            font-size: var(--text-btn);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         /* ПРИНУДИТЕЛЬНАЯ СВЕТЛАЯ ТЕМА */
@@ -67,10 +191,10 @@
             border: 1px solid var(--tg-theme-hint-color, rgba(0,0,0,0.1));
         }
         .currency-btn {
-            font-size: 2rem;
+            font-size: var(--flag-header);
             line-height: 1;
-            padding: 0.4rem 0.5rem;
-            border-radius: 0.85rem;
+            padding: clamp(0.35rem, 1.2dvh, 0.55rem) clamp(0.4rem, 1.4dvh, 0.6rem);
+            border-radius: clamp(0.7rem, 2dvh, 0.95rem);
             border: 2px solid transparent;
             background: var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05));
             transition: all 0.15s ease;
@@ -97,6 +221,10 @@
         .clear-btn:active {
             background-color: rgba(239, 68, 68, 0.2);
             transform: scale(0.98);
+        }
+        .base-selector {
+            display: flex;
+            gap: clamp(0.45rem, 1.5dvh, 0.75rem);
         }
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
@@ -125,10 +253,10 @@
     </style>
 </head>
 <body>
-    <div class="app-shell max-w-md mx-auto w-full p-3 box-border">
+    <div class="app-shell max-w-md mx-auto w-full">
         
-        <div class="relative flex justify-start items-center mb-3 flex-shrink-0">
-            <div class="flex justify-start gap-3" id="baseSelector">
+        <div class="app-header relative flex justify-start items-center">
+            <div class="base-selector" id="baseSelector">
                 <button onclick="switchCurrency('VND')" id="btn-VND" class="currency-btn active">🇻🇳</button>
                 <button onclick="switchCurrency('RUB')" id="btn-RUB" class="currency-btn">🇷🇺</button>
                 <button onclick="switchCurrency('USD')" id="btn-USD" class="currency-btn">🇺🇸</button>
@@ -143,24 +271,22 @@
             </button>
         </div>
 
-        <div class="vnds-card p-3 rounded-xl mb-3 shadow-xl transition-all flex-shrink-0">
-            <label id="inputLabel" class="block text-xs font-medium uppercase tracking-wider mb-1" style="color: var(--tg-theme-hint-color, inherit); opacity: 0.5;"></label>
+        <div class="vnds-card input-card shadow-xl transition-all">
+            <label id="inputLabel" class="input-label"></label>
             <input type="text" id="amountInput" inputmode="numeric" placeholder="0" 
-                class="w-full bg-transparent text-3xl font-bold custom-input transition-colors rounded-none pb-1">
+                class="amount-input custom-input transition-colors rounded-none">
             
-            <div class="flex gap-2 mt-3">
-                <button type="button" onclick="addZeros('000')" class="zero-btn flex-1 py-2 rounded-xl text-sm font-semibold transition-all">,000</button>
-                <button type="button" onclick="addZeros('000000')" class="zero-btn flex-1 py-2 rounded-xl text-sm font-semibold transition-all">,000,000</button>
+            <div class="zero-row">
+                <button type="button" onclick="addZeros('000')" class="zero-btn transition-all">,000</button>
+                <button type="button" onclick="addZeros('000000')" class="zero-btn transition-all">,000,000</button>
             </div>
         </div>
 
-        <div class="results-scroll">
-            <div id="results" class="space-y-2"></div>
-        </div>
+        <div id="results" class="results-list"></div>
 
-        <div class="app-footer flex-shrink-0 pt-2">
-            <div id="lastUpdate" class="mb-1.5 text-center text-[10px] opacity-30 font-medium uppercase tracking-widest"></div>
-            <button onclick="clearAll()" id="clearBtn" class="clear-btn w-full py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all"></button>
+        <div class="app-footer">
+            <div id="lastUpdate" class="last-update"></div>
+            <button onclick="clearAll()" id="clearBtn" class="clear-btn transition-all"></button>
         </div>
         
     </div>
@@ -336,13 +462,13 @@
                 const c = CURRENCIES[code];
                 const card = document.createElement('div');
                 card.id = `card-${code}`;
-                card.className = 'vnds-card py-2 px-3 rounded-xl flex justify-between items-center transition-all';
+                card.className = 'vnds-card result-card transition-all';
                 card.innerHTML = `
                     <div>
-                        <span class="block text-[10px] opacity-50 uppercase font-medium" style="color: var(--tg-theme-hint-color, inherit);">${c.label}</span>
-                        <span id="res-${code}" class="text-lg font-bold ${c.color}">0</span>
+                        <span class="result-label">${c.label}</span>
+                        <span id="res-${code}" class="result-value ${c.color}">0</span>
                     </div>
-                    <span class="text-2xl opacity-90">${c.flag}</span>
+                    <span class="result-flag">${c.flag}</span>
                 `;
                 resultsEl.appendChild(card);
             });
